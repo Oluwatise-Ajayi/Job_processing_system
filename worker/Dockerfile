@@ -2,7 +2,7 @@ FROM python:3.9-slim AS builder
 
 WORKDIR /app
 COPY requirements.txt .
-RUN pip install --user --no-warn-script-location -r requirements.txt
+RUN pip install --user --no-cache-dir --no-warn-script-location -r requirements.txt
 
 FROM python:3.9-slim
 
