@@ -5,7 +5,14 @@ import os
 
 app = FastAPI()
 
-r = redis.Redis(host="localhost", port=6379)
+redis_host = os.environ.get("REDIS_HOST", "localhost")
+redis_port = int(os.environ.get("REDIS_PORT", 6379))
+redis_password = os.environ.get("REDIS_PASSWORD", None)
+r = redis.Redis(host=redis_host, port=redis_port, password=redis_password)
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
 
 @app.post("/jobs")
 def create_job():
