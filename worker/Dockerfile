@@ -2,7 +2,7 @@ FROM python:3.13-alpine AS builder
 
 WORKDIR /app
 COPY requirements.txt .
-RUN pip install --upgrade pip && pip install --user --no-cache-dir --no-warn-script-location --upgrade -r requirements.txt
+RUN pip install --user --no-cache-dir --no-warn-script-location --upgrade -r requirements.txt
 
 FROM python:3.13-alpine
 
