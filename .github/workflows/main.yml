@@ -9,9 +9,9 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.9'
       - name: Install flake8
@@ -35,9 +35,9 @@ jobs:
     needs: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.9'
       - name: Install dependencies
@@ -49,7 +49,7 @@ jobs:
           cd api
           pytest --cov=. --cov-report=xml
       - name: Upload coverage
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: api/coverage.xml
@@ -63,7 +63,7 @@ jobs:
         ports:
           - 5000:5000
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
@@ -97,7 +97,7 @@ jobs:
           - 5000:5000
     steps:
       - name: Checkout (needed for Trivy context sometimes)
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Rebuild images for Trivy (since local registry doesn't persist across jobs)
         run: |
           docker build -t api:latest ./api
@@ -137,7 +137,7 @@ jobs:
     needs: security-scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Create .env
         run: cp .env.example .env
       - name: Up infrastructure
