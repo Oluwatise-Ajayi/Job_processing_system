@@ -1,12 +1,12 @@
-FROM python:3.9-slim AS builder
+FROM python:3.11-alpine AS builder
 
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --user --no-cache-dir --no-warn-script-location -r requirements.txt
 
-FROM python:3.9-slim
+FROM python:3.11-alpine
 
-RUN useradd -m appuser
+RUN adduser -D appuser
 USER appuser
 WORKDIR /home/appuser
 
