@@ -1,11 +1,13 @@
 FROM python:3.12-slim-bookworm AS builder
 
 WORKDIR /app
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt .
 RUN pip install --user --no-cache-dir --no-warn-script-location --upgrade -r requirements.txt
 
 FROM python:3.12-slim-bookworm
 
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 RUN useradd -m appuser
 USER appuser
 WORKDIR /home/appuser
