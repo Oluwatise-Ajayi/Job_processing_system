@@ -7,17 +7,20 @@ set -a
 . ./.env
 set +a
 
-# Create network if not exists
-docker network inspect job_internal >/dev/null 2>&1 || docker network create job_internal
+# Ensure Redis is up first (this also lets Compose create/own the network)
+echo "Ensuring Redis is running..."
+docker compose up -d redis
+docker compose wait redis 2>/dev/null || sleep 5
 
-PROJECT="job_processing_system"
 SERVICES=("api" "worker" "frontend")
 
 for SERVICE in "${SERVICES[@]}"; do
+  echo ""
+  echo "=== Rolling update: $SERVICE ==="
   echo "Building $SERVICE..."
   docker compose build "$SERVICE"
 
-  IMAGE_NAME="${PROJECT}-${SERVICE}:latest"
+  IMAGE_NAME="job_processing_system-${SERVICE}:latest"
   echo "Image: $IMAGE_NAME"
 
   echo "Starting validation container for $SERVICE..."
@@ -47,11 +50,12 @@ for SERVICE in "${SERVICES[@]}"; do
 
   if [ "$HEALTHY" = true ]; then
     echo "$SERVICE is healthy. Deploying..."
-    docker compose up -d "$SERVICE"
+    docker compose up -d --no-deps "$SERVICE"
   else
     echo "$SERVICE failed health check. Aborting rolling update. Old container remains running."
     exit 1
   fi
 done
 
+echo ""
 echo "Deployment completed successfully!"
