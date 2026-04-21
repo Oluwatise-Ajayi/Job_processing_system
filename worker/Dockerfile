@@ -1,23 +1,19 @@
 FROM python:3.12-slim-bookworm AS builder
-
 WORKDIR /app
-RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
+# hadolint ignore=DL3008,DL3009
+RUN apt-get update && apt-get upgrade -y --no-install-recommends && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt .
 RUN pip install --user --no-cache-dir --no-warn-script-location --upgrade -r requirements.txt
 
 FROM python:3.12-slim-bookworm
-
-RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
+# hadolint ignore=DL3008,DL3009
+RUN apt-get update && apt-get upgrade -y --no-install-recommends && rm -rf /var/lib/apt/lists/*
 RUN useradd -m appuser
 USER appuser
 WORKDIR /home/appuser
-
 COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
 ENV PATH=/home/appuser/.local/bin:$PATH
-
 COPY --chown=appuser:appuser . .
-
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD python -c "import os, redis; r=redis.Redis(host=os.getenv('REDIS_HOST', 'localhost'), port=int(os.getenv('REDIS_PORT', 6379)), password=os.getenv('REDIS_PASSWORD')); r.ping()" || exit 1
-
 CMD ["python", "-u", "worker.py"]

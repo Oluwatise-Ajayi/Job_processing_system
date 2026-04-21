@@ -26,7 +26,6 @@ jobs:
         run: npm install -g eslint
       - name: Lint JavaScript
         run: npx eslint frontend/app.js --no-eslintrc --env node --parserOptions=ecmaVersion:2020 || true
-        # Using || true for eslint if we don't have .eslintrc configured strictly
       - name: Install Hadolint
         run: wget -O /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-x86_64 && chmod +x /usr/local/bin/hadolint
       - name: Lint Dockerfiles
@@ -102,38 +101,43 @@ jobs:
           docker build -t worker:latest ./worker
           docker build -t frontend:latest ./frontend
 
-      - name: Run Trivy on API
+      # Generate SARIF reports (exit-code 0 so they always get created)
+      - name: Trivy SARIF - API
         uses: aquasecurity/trivy-action@master
-        if: always()
         with:
           image-ref: 'api:latest'
           format: 'sarif'
           output: 'trivy-api.sarif'
-          severity: 'CRITICAL'
-          exit-code: 1
-          ignore-unfixed: true
+          exit-code: '0'
+          scanners: 'vuln'
 
-      - name: Run Trivy on Worker
+      - name: Trivy SARIF - Worker
         uses: aquasecurity/trivy-action@master
-        if: always()
         with:
           image-ref: 'worker:latest'
           format: 'sarif'
           output: 'trivy-worker.sarif'
-          severity: 'CRITICAL'
-          exit-code: 1
-          ignore-unfixed: true
+          exit-code: '0'
+          scanners: 'vuln'
 
-      - name: Run Trivy on Frontend
+      - name: Trivy SARIF - Frontend
         uses: aquasecurity/trivy-action@master
-        if: always()
         with:
           image-ref: 'frontend:latest'
           format: 'sarif'
           output: 'trivy-frontend.sarif'
-          severity: 'CRITICAL'
-          exit-code: 1
-          ignore-unfixed: true
+          exit-code: '0'
+          scanners: 'vuln'
+
+      # Gate check: fail on fixable CRITICAL vulnerabilities using CLI
+      - name: Fail on fixable CRITICAL vulnerabilities
+        run: |
+          echo "--- Scanning API ---"
+          trivy image --severity CRITICAL --ignore-unfixed --exit-code 1 --scanners vuln --quiet api:latest
+          echo "--- Scanning Worker ---"
+          trivy image --severity CRITICAL --ignore-unfixed --exit-code 1 --scanners vuln --quiet worker:latest
+          echo "--- Scanning Frontend ---"
+          trivy image --severity CRITICAL --ignore-unfixed --exit-code 1 --scanners vuln --quiet frontend:latest
 
       - name: Upload Trivy API results
         uses: github/codeql-action/upload-sarif@v4
@@ -190,7 +194,7 @@ jobs:
     needs: integration-test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Create .env
         run: cp .env.example .env
       - name: Scripted Rolling Update Deployment
