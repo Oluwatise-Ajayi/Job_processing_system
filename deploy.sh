@@ -7,10 +7,9 @@ set -a
 . ./.env
 set +a
 
-# Ensure Redis is up first (this also lets Compose create/own the network)
-echo "Ensuring Redis is running..."
-docker compose up -d redis
-docker compose wait redis 2>/dev/null || sleep 5
+# Ensure Redis is up and healthy first (this also lets Compose create/own the network)
+echo "Ensuring Redis is running and healthy..."
+docker compose up -d --wait redis
 
 SERVICES=("api" "worker" "frontend")
 
